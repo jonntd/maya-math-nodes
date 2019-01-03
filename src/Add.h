@@ -5,7 +5,7 @@
 #include "Utils.h"
 
 template<typename TInOutAttrType, typename TInAttrType, typename TClass, const char* TTypeName>
-class MultiplyNode : public BaseNode<TClass, TTypeName>
+class AddNode : public BaseNode<TClass, TTypeName>
 {
 public:
     static MStatus initialize()
@@ -31,7 +31,7 @@ public:
             const auto input1Value = getAttribute<TInOutAttrType>(dataBlock, input1Attr_);
             const auto input2Value = getAttribute<TInAttrType>(dataBlock, input2Attr_);
             
-            setAttribute(dataBlock, outputAttr_, TInOutAttrType(input1Value * input2Value));
+            setAttribute(dataBlock, outputAttr_, TInOutAttrType(input1Value + input2Value));
             
             return MS::kSuccess;
         }
@@ -56,25 +56,19 @@ private:
 };
 
 template<typename TInOutAttrType, typename TInAttrType, typename TClass, const char* TTypeName>
-Attribute MultiplyNode<TInOutAttrType, TInAttrType, TClass, TTypeName>::input1Attr_;
+Attribute AddNode<TInOutAttrType, TInAttrType, TClass, TTypeName>::input1Attr_;
 
 template<typename TInOutAttrType, typename TInAttrType, typename TClass, const char* TTypeName>
-Attribute MultiplyNode<TInOutAttrType, TInAttrType, TClass, TTypeName>::input2Attr_;
+Attribute AddNode<TInOutAttrType, TInAttrType, TClass, TTypeName>::input2Attr_;
 
 template<typename TInOutAttrType, typename TInAttrType, typename TClass, const char* TTypeName>
-Attribute MultiplyNode<TInOutAttrType, TInAttrType, TClass, TTypeName>::outputAttr_;
+Attribute AddNode<TInOutAttrType, TInAttrType, TClass, TTypeName>::outputAttr_;
 
-#define MULTIPLY_NODE(InOutAttrType, InAttrType, NodeName) \
+#define ADD_NODE(InOutAttrType, InAttrType, NodeName) \
     TEMPLATE_PARAMETER_LINKAGE char name##NodeName[] = #NodeName; \
-    class NodeName : public MultiplyNode<InOutAttrType, InAttrType, NodeName, name##NodeName> {};
+    class NodeName : public AddNode<InOutAttrType, InAttrType, NodeName, name##NodeName> {};
 
-MULTIPLY_NODE(double, double, Multiply);
-MULTIPLY_NODE(double, int, MultiplyByInt);
-MULTIPLY_NODE(int, int, MultiplyInt);
-MULTIPLY_NODE(MAngle, double, MultiplyAngle);
-MULTIPLY_NODE(MAngle, int, MultiplyAngleByInt);
-MULTIPLY_NODE(MMatrix, MMatrix, MultiplyMatrix);
-MULTIPLY_NODE(MVector, double, MultiplyVector);
-MULTIPLY_NODE(MVector, MMatrix, MultiplyVectorByMatrix);
-MULTIPLY_NODE(MQuaternion, MQuaternion, MultiplyQuaternion);
-MULTIPLY_NODE(MEulerRotation, double, MultiplyRotation);
+ADD_NODE(double, double, Add);
+ADD_NODE(int, int, AddInt);
+ADD_NODE(MAngle, MAngle, AddAngle);
+ADD_NODE(MVector, MVector, AddVector);

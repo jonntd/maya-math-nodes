@@ -8,13 +8,13 @@ namespace std
 {
 
 template <>
-inline const MAngle& max(const MAngle& a, const MAngle& b) // NOLINT
+inline const MAngle& max(const MAngle& a, const MAngle& b)
 {
     return (a.asRadians() > b.asRadians()) ? a : b;
 }
 
 template <>
-inline const MAngle& min(const MAngle& a, const MAngle& b) // NOLINT
+inline const MAngle& min(const MAngle& a, const MAngle& b)
 {
     return (a.asRadians() < b.asRadians()) ? a : b;
 }
@@ -28,15 +28,16 @@ class MinMaxNode : public BaseNode<TClass, TTypeName>
 public:
     static MStatus initialize()
     {
-        createAttribute(inputAAttr_, "inputA", DefaultValue<TAttrType>(0.0));
-        createAttribute(inputBAttr_, "inputB", DefaultValue<TAttrType>(1.0));
-        createAttribute(outputAttr_, "output", DefaultValue<TAttrType>(0.0), false);
+        createAttribute(input1Attr_, "input1", DefaultValue<TAttrType>());
+        createAttribute(input2Attr_, "input2", DefaultValue<TAttrType>());
+        createAttribute(outputAttr_, "output", DefaultValue<TAttrType>(), false);
         
-        MPxNode::addAttribute(inputBAttr_);
+        MPxNode::addAttribute(input1Attr_);
+        MPxNode::addAttribute(input2Attr_);
         MPxNode::addAttribute(outputAttr_);
         
-        MPxNode::attributeAffects(inputAAttr_, outputAttr_);
-        MPxNode::attributeAffects(inputBAttr_, outputAttr_);
+        MPxNode::attributeAffects(input1Attr_, outputAttr_);
+        MPxNode::attributeAffects(input2Attr_, outputAttr_);
         
         return MS::kSuccess;
     }
@@ -45,15 +46,10 @@ public:
     {
         if (plug == outputAttr_ || (plug.isChild() && plug.parent() == outputAttr_))
         {
-            MDataHandle inputAHandle = dataBlock.inputValue(inputAAttr_);
-            const TAttrType inputAValue = getAttribute<TAttrType>(inputAHandle);
+            const auto input1Value = getAttribute<TAttrType>(dataBlock, input1Attr_);
+            const auto input2Value = getAttribute<TAttrType>(dataBlock, input2Attr_);
             
-            MDataHandle inputBHandle = dataBlock.inputValue(inputBAttr_);
-            const TAttrType inputBValue = getAttribute<TAttrType>(inputBHandle);
-            
-            MDataHandle outputHandle = dataBlock.outputValue(outputAttr_);
-            outputHandle.set(TOpFuncPtr(inputAValue, inputBValue));
-            outputHandle.setClean();
+            setAttribute(dataBlock, outputAttr_, TOpFuncPtr(input1Value, input2Value));
             
             return MS::kSuccess;
         }
@@ -62,26 +58,26 @@ public:
     }
 
 private:
-    static MObject inputAAttr_;
-    static MObject inputBAttr_;
-    static MObject outputAttr_;
+    static Attribute input1Attr_;
+    static Attribute input2Attr_;
+    static Attribute outputAttr_;
 };
 
 template<typename TAttrType, typename TClass, const char* TTypeName,
          const TAttrType& (*TOpFuncPtr)(const TAttrType&, const TAttrType&)>
-MObject MinMaxNode<TAttrType, TClass, TTypeName, TOpFuncPtr>::inputAAttr_; // NOLINT
+Attribute MinMaxNode<TAttrType, TClass, TTypeName, TOpFuncPtr>::input1Attr_;
 
 template<typename TAttrType, typename TClass, const char* TTypeName,
          const TAttrType& (*TOpFuncPtr)(const TAttrType&, const TAttrType&)>
-MObject MinMaxNode<TAttrType, TClass, TTypeName, TOpFuncPtr>::inputBAttr_; // NOLINT
+Attribute MinMaxNode<TAttrType, TClass, TTypeName, TOpFuncPtr>::input2Attr_;
 
 template<typename TAttrType, typename TClass, const char* TTypeName,
          const TAttrType& (*TOpFuncPtr)(const TAttrType&, const TAttrType&)>
-MObject MinMaxNode<TAttrType, TClass, TTypeName, TOpFuncPtr>::outputAttr_; // NOLINT
+Attribute MinMaxNode<TAttrType, TClass, TTypeName, TOpFuncPtr>::outputAttr_;
 
 #define MIN_MAX_NODE(AttrType, NodeName, OpFuncPtr) \
-    constexpr char name##NodeName[] = #NodeName;    \
-    class NodeName : public MinMaxNode<AttrType, NodeName, name##NodeName, OpFuncPtr> {}; // NOLINT
+    TEMPLATE_PARAMETER_LINKAGE char name##NodeName[] = #NodeName; \
+    class NodeName : public MinMaxNode<AttrType, NodeName, name##NodeName, OpFuncPtr> {};
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "TemplateArgumentsIssues"

@@ -4,30 +4,8 @@
 
 #include "Utils.h"
 
-namespace std_ext
-{
-
-template <typename TType>
-inline typename std::enable_if<std::is_pod<TType>::value, TType>::type
-abs_t(TType value)
-{
-    return std::abs(value);
-}
-
-template <typename TType>
-inline typename std::enable_if<!std::is_pod<TType>::value, TType>::type
-abs_t(const TType& value);
-
-template <>
-inline MAngle abs_t<MAngle>(const MAngle& value)
-{
-    return MAngle(std::abs(value.asRadians()));
-}
-
-}
-
 template<typename TAttrType, typename TClass, const char* TTypeName>
-class AbsoluteNode : public BaseNode<TClass, TTypeName>
+class InverseNode : public BaseNode<TClass, TTypeName>
 {
 public:
     static MStatus initialize()
@@ -45,11 +23,11 @@ public:
     
     MStatus compute(const MPlug& plug, MDataBlock& dataBlock) override
     {
-        if (plug == outputAttr_)
+        if (plug == outputAttr_ || (plug.isChild() && plug.parent() == outputAttr_))
         {
-            const auto inputAttrValue = getAttribute<TAttrType>(dataBlock, inputAttr_);
+            const auto inputValue = getAttribute<TAttrType>(dataBlock, inputAttr_);
             
-            setAttribute(dataBlock, outputAttr_, std_ext::abs_t(inputAttrValue));
+            setAttribute(dataBlock, outputAttr_, inputValue.inverse());
             
             return MS::kSuccess;
         }
@@ -73,15 +51,15 @@ private:
 };
 
 template<typename TAttrType, typename TClass, const char* TTypeName>
-Attribute AbsoluteNode<TAttrType, TClass, TTypeName>::inputAttr_;
+Attribute InverseNode<TAttrType, TClass, TTypeName>::inputAttr_;
 
 template<typename TAttrType, typename TClass, const char* TTypeName>
-Attribute AbsoluteNode<TAttrType, TClass, TTypeName>::outputAttr_;
+Attribute InverseNode<TAttrType, TClass, TTypeName>::outputAttr_;
 
-#define ABSOLUTE_NODE(AttrType, NodeName) \
+#define INVERSE_NODE(AttrType, NodeName) \
     TEMPLATE_PARAMETER_LINKAGE char name##NodeName[] = #NodeName; \
-    class NodeName : public AbsoluteNode<AttrType, NodeName, name##NodeName> {};
+    class NodeName : public InverseNode<AttrType, NodeName, name##NodeName> {};
 
-ABSOLUTE_NODE(double, Absolute);
-ABSOLUTE_NODE(int, AbsoluteInt);
-ABSOLUTE_NODE(MAngle, AbsoluteAngle);
+INVERSE_NODE(MMatrix, InverseMatrix);
+INVERSE_NODE(MQuaternion, InverseQuaternion);
+INVERSE_NODE(MEulerRotation, InverseRotation);

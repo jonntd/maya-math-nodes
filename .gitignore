@@ -11,3 +11,11 @@ CTestTestfile.cmake
 
 # CLion
 .idea/
+build/
+
+# Python
+*.pyc
+
+# Other
+.vscode/
+dist/
